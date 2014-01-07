@@ -98,5 +98,5 @@ not provided, all mappings should be returned
 funcdef lookup_feature_synonyms(string genome_kbase_id, string feature_type)
 	returns (list<IdPair>);
 
-}
+};
 
