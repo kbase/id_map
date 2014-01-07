@@ -1,0 +1,11 @@
+funcdef lookup_genome(string genome_id) returns (list<IdPair>);
+
+So, what does this mean? It means that a lookup will be performed that
+takes as input a genome name (in the form of an NCBI taxonomy
+scientific_name) and return all kbsae genome ids that have associated
+with id a name that matches what was passed in.
+
+It also means that a lookup, if done on a database, at best can only
+be a case insensitive exact match of the query as a substring.
+
+
