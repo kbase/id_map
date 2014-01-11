@@ -1,0 +1,15 @@
+#!/bin/sh
+
+rm -rf	lib/IdMapImpl.py.bak-*
+rm -rf	lib/IdMapServer.py
+rm -rf	lib/Bio/KBase/IdMap/IdMapImpl.pm.bak-*
+rm -rf	lib/Bio/KBase/IdMap/Client.pm
+rm -rf	lib/Bio/KBase/IdMap/Service.pm
+rm -rf	lib/biokbase/
+rm -rf	lib/javascript/
+rm -rf	pod2htmd.tmp
+rm -rf	docs/IdMap.html
+rm -rf	lib/IdMap.psgi
+rm -rf	lib/IdMapImpl.py
+rm -rf  service/IdMap.conf
+
