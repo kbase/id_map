@@ -1,85 +1,68 @@
+/*  The IdMap service client provides various lookups. These
+    lookups are designed to provide mappings of external
+    identifiers to kbase identifiers. 
+
+    Not all lookups are easily represented as one-to-one
+    mappings.
+*/
+
 module IdMapper {
 
-/*
-	Useful refs: http://www.uniprot.org/mapping/
+  /*  An IdPair object represents a mapping of a kbase id
+      to an external id. Additional information includes
+      the source database of the external id.
+  */
 
-	IdMap service enables mapping of external ids to kbase
-	ids for genomes, genes, and proteins. Future releases will
-	expand the set of biological objects that are associated
-	through id maps.
-*/
+  typedef structure{
+    string source_db;
+    string source_id;
+    string kbase_id;
+  } IdPair;
 
+  /*  Makes an attempt to map external identifier of a genome to
+      the corresponding kbase identifier. Multiple candidates can
+      be found, thus a list of IdPairs is returned.
 
+      string s - a string that represents some sort of genome
+      identifier. The type of identifier is resolved with the
+      type parameter.
 
-/*
-	A mapping of external identifier of an object to a
-	corresponding kbase identifier.
+      string type - this provides information about the tupe
+      of alias that is provided as the first parameter.
 
-	string source_db - source database/resource of the object
-					   to be mapped to kbase id
-	string source_id - identifier of the object to be mapped to
-					   kbase id
-	string kbase_id  - identifier of the same object in the
-					   KBase name space
+      An example of the parameters is the first parameter could
+      be a string "Burkholderia" and the type could be
+      scientific_name.
 
-	Supported external databases are maintained as a
-	controlled vocabulary, and include:
+      A second example is the first parmater could be an integer
+      and the type could be ncbi_taxonid.
 
-*/
+      These are the two supported cases at this time.
+  */
 
-typedef structure{
-	string source_db;
-	string source_id;
-	string kbase_id;
-} IdPair;
-
-
-/*
-Makes an attempt to map external identifier of a genome to
-the corresponding kbase identifier. Multiple candidates can
-be found, thus a list of IdPairs is returned.
-
-string genome_id - a genome identifier. The genome identifier
-can be taxonomy id, genome name, or any other genome
-identifier.
-
-NOTE: This needs to be clarified. "any other genome
-identifier" is an unconstrained statement. We need percise
-not abstract statements here.
-
-*/
-funcdef lookup_genome(string genome_id) returns (list<IdPair>);
+  funcdef lookup_genome(string s, string type)
+    returns (list<IdPair> id_pairs);
 
 
-/*
-Makes an attempt to map external identifiers of features
-(genes, proteins, etc) to the corresponding kbase
-identifiers. Multiple candidates can be found per each
-external feature identifier.
+  /*  Makes an attempt to map external identifiers of features
+      (genes, proteins, etc) to the corresponding kbase
+      identifiers. Multiple candidates can be found per each
+      external feature identifier.
 
-    string genome_kbase_id - kbase id of a target genome
-    list<string> feature_ids - list of feature identifiers.
-	e.g. locus tag, gene name, MO locus id, etc.
+      string kb_genome_id  - kbase id of a target genome
 
-	NOTE: Again, specificity of statements. 'etc' is not
-	specific and should not be included in this document.
+      list<string> aliases - list of aliases to lookup. 
 
-    string feature_type - type of a kbase feature to map to,
-	e.g. CDS, pep, etc (see
-	https://trac.kbase.us/projects/kbase/wiki/IDRegistry). If
-	not provided, all mappings should be returned
+      string feature_type  - type of a kbase feature to map to,
+      Supported types are 'CDS'.
 
-	NOTE: We need the specific list of feature types that
-	will be supported.
+      string source_db     - the name of a database to consider as
+      a source of a feature_ids. If not provided, all databases
+      should be considered,
+  */
 
-    string source_db - the name of a database to consider as
-	a source of a feature_ids. If not provided, all databases
-	should be considered,
-*/
-
-
-funcdef lookup_features(string genome_kbase_id, list<string> feature_ids, string feature_type, string source_db)
-	returns ( mapping<string, list<IdPair>> );
+  funcdef lookup_features(string kb_genome_id, list<string> aliases, string feature_type, string source_db)
+    returns ( mapping<string, list<IdPair>> );
 
 
 /*
