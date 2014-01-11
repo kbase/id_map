@@ -1,5 +1,7 @@
 use Test::More;
 use Config::Simple;
+use Log::Log4perl qw(:easy);
+Log::Log4perl->easy_init($DEBUG);
 
 our $cfg = {};
 our ($obj, $h);
@@ -12,7 +14,7 @@ if (defined $ENV{KB_DEPLOYMENT_CONFIG} && -e $ENV{KB_DEPLOYMENT_CONFIG}) {
 else {
     $cfg = new Config::Simple(syntax=>'ini');
     $cfg->param('id_map.service-host', '127.0.0.1');
-    $cfg->param('id_map.service-port', '7777');
+    $cfg->param('id_map.service-port', '7111');
 }
 
 
@@ -34,8 +36,12 @@ can_ok("Bio::KBase::IdMap::Client", qw(
 	 )
 );
 
+INFO "using $url";
 
 isa_ok ($obj = Bio::KBase::IdMap::Client->new($url), Bio::KBase::IdMap::Client);
+
+$genomes = $obj->lookup_genome("Burkholderia");
+
 
 
 done_testing;
