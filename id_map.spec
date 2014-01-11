@@ -6,7 +6,7 @@
     mappings.
 */
 
-module IdMapper {
+module IdMap {
 
   /*  An IdPair object represents a mapping of a kbase id
       to an external id. Additional information includes
