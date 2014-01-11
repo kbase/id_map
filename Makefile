@@ -5,7 +5,7 @@ include $(TOP_DIR)/tools/Makefile.common
 
 SERVICE_SPEC = id_map.spec
 SERVICE_NAME = IdMap
-SERVICE_PORT = 7777
+SERVICE_PORT = 7111
 SERVICE_DIR  = id_map
 
 SERVICE_PSGI = $(SERVICE_NAME).psgi
