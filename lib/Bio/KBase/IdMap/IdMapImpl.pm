@@ -16,6 +16,27 @@ IdMapper
 =cut
 
 #BEGIN_HEADER
+use DBI;
+use Data::Dumper;
+use Config::Simple;
+use Log::Log4perl qw(:easy);
+Log::Log4perl->easy_init($DEBUG);
+use Bio::KBase::CDMI::Client;
+our $cfg = {};
+our ($mysql_user, $mysql_pass, $data_source, $cdmi_url);
+
+if (defined $ENV{KB_DEPLOYMENT_CONFIG} && -e $ENV{KB_DEPLOYMENT_CONFIG}) {
+    $cfg = new Config::Simple($ENV{KB_DEPLOYMENT_CONFIG}) or
+        die "could not construct new Config::Simple object";
+    $mysql_user    = $cfg->param('id_map.mysql-user');
+    $mysql_pass    = $cfg->param('id_map.mysql-pass');
+    $data_source   = $cfg->param('id_map.data-source');
+    $cdmi_url      = $cfg->param('id_map.cdmi_url');
+    INFO "$$ reading config from $ENV{KB_DEPLOYMENT_CONFIG}";
+}
+else {
+    die "could not find KB_DEPLOYMENT_CONFIG";
+}
 #END_HEADER
 
 sub new
@@ -25,6 +46,19 @@ sub new
     };
     bless $self, $class;
     #BEGIN_CONSTRUCTOR
+        my @connection = ($data_source, $mysql_user, $mysql_pass, {});
+        $self->{dbh} = DBI->connect(@connection) or die "could not connect";
+	print STDERR join(", ", @connection);
+        # need some assurance that the handle is still connected. not 
+        # totally sure this will work. needs to be tested.
+        $self->{get_dbh} = sub {
+                unless ($self->{dbh}->ping) {
+                        $self->{dbh} = DBI->connect(@connection);
+                }
+                return $self->{dbh};
+        };	
+	$self->{cdmi} = Bio::KBase::CDMI::Client->new($cdmi_url);
+		
     #END_CONSTRUCTOR
 
     if ($self->can('_init_instance'))
@@ -108,6 +142,13 @@ sub lookup_genome
     my $ctx = $Bio::KBase::IdMap::Service::CallContext;
     my($return);
     #BEGIN lookup_genome
+	my $dbh = $self->{get_dbh}->();
+	my $sql = "select id from Genome where UPPER(scientific_name) ";
+	$sql   .= "like \'$genome_id%\'";
+	$dbh->prepare($sql) or die "can not prepare $sql";
+	my $rs = $dbh->execute($sql) or die "can not execute $sql";
+	$return = fetchall_arrayref();
+
     #END lookup_genome
     my @_bad_returns;
     (ref($return) eq 'ARRAY') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
@@ -298,6 +339,29 @@ sub lookup_feature_synonyms
     my $ctx = $Bio::KBase::IdMap::Service::CallContext;
     my($return);
     #BEGIN lookup_feature_synonyms
+
+
+
+# aliases_to_fids
+
+  # $return = $obj->aliases_to_fids($aliases)
+
+# Parameter and return types
+
+#    $aliases is an aliases
+#    $return is a reference to a hash where the key is an alias and the value is a fid
+#    aliases is a reference to a list where each element is an alias
+#    alias is a string
+#    fid is a string
+
+
+
+
+
+
+
+
+
     #END lookup_feature_synonyms
     my @_bad_returns;
     (ref($return) eq 'ARRAY') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
@@ -362,11 +426,11 @@ A mapping of external identifier of an object to a
 corresponding kbase identifier.
 
 string source_db - source database/resource of the object
-                   to be mapped to kbase id
+                                   to be mapped to kbase id
 string source_id - identifier of the object to be mapped to
-                   kbase id
+                                   kbase id
 string kbase_id  - identifier of the same object in the
-                   KBase name space
+                                   KBase name space
 
 Supported external databases are maintained as a
 controlled vocabulary, and include:
