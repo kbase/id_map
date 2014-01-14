@@ -7,7 +7,7 @@ our $VERSION = "0.1.0";
 
 =head1 NAME
 
-IdMapper
+IdMap
 
 =head1 DESCRIPTION
 
@@ -41,6 +41,7 @@ if (defined $ENV{KB_DEPLOYMENT_CONFIG} && -e $ENV{KB_DEPLOYMENT_CONFIG}) {
     INFO "$$ mysl user:   $mysql_user";
     INFO "$$ data source: $data_source";
     INFO "$$ cdmi url:    $cdmi_url";
+    INFO "$$ mysql pass:  $mysql_pass";
 }
 else {
     die "could not find KB_DEPLOYMENT_CONFIG";
@@ -164,13 +165,13 @@ sub lookup_genome
     my($id_pairs);
     #BEGIN lookup_genome
 
-	my ($sql, $rs, $results, $id_pairs, $source_db);
+	my ($sql, $sth, $rv, $results, $id_pairs, $source_db);
 	my $dbh = $self->{get_dbh}->();
 
 	if ( uc($type) eq "NAME" ) {
 
 	    $sql  = "select id from Genome ";
-	    $sql .= "where UPPER(scientific_name) like \'$s\%\'";
+	    $sql .= "where UPPER(scientific_name) like \'" . uc $s . "\%\'";
 
 	    $source_db = 'NCBI';
 
@@ -187,9 +188,9 @@ sub lookup_genome
 
 	}
 
-        $dbh->prepare($sql) or die "can not prepare $sql";
-        $rs = $dbh->execute($sql) or die "can not execute $sql";
-        $results = fetchall_arrayref();
+        $sth = $dbh->prepare($sql) or die "can not prepare $sql";
+        $rv = $sth->execute() or die "can not execute $sql";
+        $results = $sth->fetchall_arrayref();
 
 	$id_pairs = [];
         foreach my $result (@$results) {
