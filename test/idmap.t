@@ -2,6 +2,7 @@ use Test::More;
 use Config::Simple;
 use Log::Log4perl qw(:easy);
 Log::Log4perl->easy_init($DEBUG);
+use Data::Dumper;
 
 our $cfg = {};
 our ($obj, $h);
@@ -40,8 +41,9 @@ INFO "using $url";
 
 isa_ok ($obj = Bio::KBase::IdMap::Client->new($url), Bio::KBase::IdMap::Client);
 
-$genomes = $obj->lookup_genome("Burkholderia");
+ok(($genomes = $obj->lookup_genome("Burkholderia","NAME" )) > 0,
+	"lookup_genome returned genomes");
 
-
+print Dumper $genomes;
 
 done_testing;
