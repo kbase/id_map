@@ -53,6 +53,10 @@ ok(@{$genomes = $obj->lookup_genome(180504, "NCBI_TAXID")} == 1,
 
 print Dumper $genomes;
 
+# funcdef lookup_features(string kb_genome_id, list<string> aliases, string feature_type, string source_db)
+
+ok(ref($obj->lookup_features("",[],"","")) eq 'HASH', "lookup_features returns a hash reference");
+ok(ref($obj->lookup_feature_synonyms("","")) eq 'ARRAY', "lookup_feature_synonyms returns an array reference");
 
 
 
