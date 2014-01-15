@@ -141,7 +141,8 @@ scientific_name.
 A second example is the first parmater could be an integer
 and the type could be ncbi_taxonid.
 
-These are the two supported cases at this time.
+These are the two supported cases at this time. Valid types
+are NAME and NCBI_TAXID
 
 =back
 
