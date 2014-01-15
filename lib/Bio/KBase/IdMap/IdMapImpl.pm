@@ -299,7 +299,7 @@ sub lookup_features
     my $ctx = $Bio::KBase::IdMap::Service::CallContext;
     my($return);
     #BEGIN lookup_features
-
+	$return = {'string'=> {'source_db'=>'sourcedb', 'source_id'=>'sourceid','kbase_id'=>'kbase_id'}};
 #	my $fids = $self->{}->aliases_to_fids($aliases);
 
 
@@ -390,7 +390,7 @@ sub lookup_feature_synonyms
     my($return);
     #BEGIN lookup_feature_synonyms
 
-
+	my $return = [{'source_db'=>'sourcedb','source_id'=>'sourceid','kbase_id'=>'kbaseid'}];
 
 # aliases_to_fids
 
