@@ -1,6 +1,5 @@
 /kb/deployment/services/id_map/stop_service
 source ../../user-env.sh
-make
-make deploy
+cp lib/Bio/KBase/IdMap/IdMapImpl.pm /kb/deployment/lib/Bio/KBase/IdMap/
 source /kb/deployment/user-env.sh
 /kb/deployment/services/id_map/start_service &
