@@ -304,7 +304,23 @@ sub lookup_features
     #BEGIN lookup_features
 	$return = {'string'=> {'source_db'=>'sourcedb', 'source_id'=>'sourceid','kbase_id'=>'kbase_id'}};
 #	my $fids = $self->{}->aliases_to_fids($aliases);
-
+	$return = {
+          'AAA' => {
+                        'source_id' => 'AAA',
+                        'source_db' => 'fake sourcedb',
+                        'kbase_id' => 'kb|g.20848.CDS.fakeid'
+                      },
+          'BBB' => {
+                        'source_id' => 'BBB',
+                        'source_db' => 'fake sourcedb',
+                        'kbase_id' => 'kb|g.20848.CDS.fakeid'
+                      },
+          'CCC' => {
+                        'source_id' => 'CCC',
+                        'source_db' => 'fake sourcedb',
+                        'kbase_id' => 'kb|g.20848.CDS.fakeid'
+                      }
+        };
 
 
     #END lookup_features
