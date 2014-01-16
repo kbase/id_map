@@ -38,10 +38,10 @@ if (defined $ENV{KB_DEPLOYMENT_CONFIG} && -e $ENV{KB_DEPLOYMENT_CONFIG}) {
     $data_source   = $cfg->param('id_map.data-source');
     $cdmi_url      = $cfg->param('id_map.cdmi_url');
     INFO "$$ reading config from $ENV{KB_DEPLOYMENT_CONFIG}";
-    INFO "$$ mysl user:   $mysql_user";
+    # DEBUG "$$ mysl user:   $mysql_user";
     INFO "$$ data source: $data_source";
     INFO "$$ cdmi url:    $cdmi_url";
-    INFO "$$ mysql pass:  $mysql_pass";
+    # DEBUG "$$ mysql pass:  $mysql_pass";
 }
 else {
     die "could not find KB_DEPLOYMENT_CONFIG";
@@ -277,6 +277,8 @@ string source_db     - the name of a database to consider as
 a source of a feature_ids. If not provided, all databases
 should be considered,
 
+The return is a mapping OF WHAT?
+
 =back
 
 =cut
@@ -365,9 +367,8 @@ particular kbase genome, and a given type of a feature.
 
 string genome_kbase_id - kbase id of a target genome
 string feature_type - type of a kbase feature, e.g. CDS,
-pep, etc (see
-https://trac.kbase.us/projects/kbase/wiki/IDRegistry). If
-not provided, all mappings should be returned
+pep, etc (see https://trac.kbase.us/projects/kbase/wiki/IDRegistry).
+If not provided, all mappings should be returned.
 
 =back
 
@@ -420,6 +421,205 @@ sub lookup_feature_synonyms
 	my $msg = "Invalid returns passed to lookup_feature_synonyms:\n" . join("", map { "\t$_\n" } @_bad_returns);
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
 							       method_name => 'lookup_feature_synonyms');
+    }
+    return($return);
+}
+
+
+
+
+=head2 longest_cds_from_locus
+
+  $return = $obj->longest_cds_from_locus($arg_1)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$arg_1 is a reference to a list where each element is a string
+$return is a reference to a hash where the key is a string and the value is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$arg_1 is a reference to a list where each element is a string
+$return is a reference to a hash where the key is a string and the value is a string
+
+
+=end text
+
+
+
+=item Description
+
+Returns - A mapping of locus feature id to cds feature id
+
+=back
+
+=cut
+
+sub longest_cds_from_locus
+{
+    my $self = shift;
+    my($arg_1) = @_;
+
+    my @_bad_arguments;
+    (ref($arg_1) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"arg_1\" (value was \"$arg_1\")");
+    if (@_bad_arguments) {
+	my $msg = "Invalid arguments passed to longest_cds_from_locus:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'longest_cds_from_locus');
+    }
+
+    my $ctx = $Bio::KBase::IdMap::Service::CallContext;
+    my($return);
+    #BEGIN longest_cds_from_locus
+
+	my($sql, $dbh, $sth, $rv, @query_ids);
+
+	my $dbh = $self->{get_dbh}->();
+	foreach (@{ $arg_1 }) {
+		push @query_ids, $dbh->quote($_);
+	}
+
+	$sql  = "select t1.to_link, t1.from_link, t2.from_link, f.sequence_length ";
+	$sql .= "from Feature f, Encompasses t1 ";
+	$sql .= "join Encompasses t2 on t1.from_link = t2.to_link ";
+	$sql .= "where t1.to_link in ( ";
+	$sql .= join ",", @query_ids;
+	$sql .= " ) ";
+	$sql .= "and t2.from_link = f.id";
+
+	DEBUG "$$ $sql";
+
+	$sth = $dbh->prepare($sql) or die "can not prepare $sql";
+	$rv = $sth->execute() or die "can not execute $sql";
+	
+	while(my $ary_ref = $sth->fetchrow_arrayref) {
+		DEBUG "$$ $ary_ref->[0] $ary_ref->[2] $ary_ref->[3]";
+		my ($len) = values %{ $return->{$ary_ref->[0]} };
+		$return->{$ary_ref->[0]} = {$ary_ref->[2] => $ary_ref->[3]}
+			 if $ary_ref->[3] > $len;
+		DEBUG "$$ is $ary_ref->[3] gt $len";
+	}
+	
+
+
+# select m2l.to_link as LOCUS, c2m.to_link as mRNA, f.id as CDS, f.sequence_length
+# from Feature f left outer join Encompasses c2m on f.id = c2m.from_link
+# left outer join Encompasses m2l on c2m.to_link = m2l.from_link
+# where substring_index(f.id, '.', 2) = 'kb|g.3899'
+# and f.feature_type = 'CDS'
+# and ((m2l.to_link is not NULL) or (c2m.to_link is not NULL))
+# order by m2l.to_link, c2m.to_link, f.id ;
+
+
+    #END longest_cds_from_locus
+    my @_bad_returns;
+    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
+    if (@_bad_returns) {
+	my $msg = "Invalid returns passed to longest_cds_from_locus:\n" . join("", map { "\t$_\n" } @_bad_returns);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'longest_cds_from_locus');
+    }
+    return($return);
+}
+
+
+
+
+=head2 longest_cds_from_mrna
+
+  $return = $obj->longest_cds_from_mrna($arg_1)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$arg_1 is a reference to a list where each element is a string
+$return is a reference to a hash where the key is a string and the value is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$arg_1 is a reference to a list where each element is a string
+$return is a reference to a hash where the key is a string and the value is a string
+
+
+=end text
+
+
+
+=item Description
+
+
+
+=back
+
+=cut
+
+sub longest_cds_from_mrna
+{
+    my $self = shift;
+    my($arg_1) = @_;
+
+    my @_bad_arguments;
+    (ref($arg_1) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"arg_1\" (value was \"$arg_1\")");
+    if (@_bad_arguments) {
+	my $msg = "Invalid arguments passed to longest_cds_from_mrna:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'longest_cds_from_mrna');
+    }
+
+    my $ctx = $Bio::KBase::IdMap::Service::CallContext;
+    my($return);
+    #BEGIN longest_cds_from_mrna
+        my($sql, $dbh, $sth, $rv, @query_ids);
+
+        my $dbh = $self->{get_dbh}->();
+        foreach (@{ $arg_1 }) {
+                push @query_ids, $dbh->quote($_);
+        }
+
+        $sql  = "select t1.to_link, t1.from_link, t2.from_link, f.sequence_length ";
+        $sql .= "from Feature f, Encompasses t1 ";
+        $sql .= "join Encompasses t2 on t1.from_link = t2.to_link ";
+        $sql .= "where t1.from_link in ( ";
+        $sql .= join ",", @query_ids;
+        $sql .= " ) ";
+        $sql .= "and t2.from_link = f.id";
+
+        DEBUG "$$ $sql";
+
+        $sth = $dbh->prepare($sql) or die "can not prepare $sql";
+        $rv = $sth->execute() or die "can not execute $sql";
+
+        while(my $ary_ref = $sth->fetchrow_arrayref) {
+                DEBUG "$$ $ary_ref->[1] $ary_ref->[2] $ary_ref->[3]";
+                my ($len) = values %{ $return->{$ary_ref->[1]} };
+                $return->{$ary_ref->[1]} = {$ary_ref->[2] => $ary_ref->[3]}
+                         if $ary_ref->[3] > $len;
+                DEBUG "$$ is $ary_ref->[3] gt $len";
+        }
+    #END longest_cds_from_mrna
+    my @_bad_returns;
+    (ref($return) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"return\" (value was \"$return\")");
+    if (@_bad_returns) {
+	my $msg = "Invalid returns passed to longest_cds_from_mrna:\n" . join("", map { "\t$_\n" } @_bad_returns);
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+							       method_name => 'longest_cds_from_mrna');
     }
     return($return);
 }
