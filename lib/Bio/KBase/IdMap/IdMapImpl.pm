@@ -188,6 +188,11 @@ sub lookup_genome
 	    $source_db = 'NCBI';
 
 	}
+	else {
+		die "unrecognized type $type";
+	}
+
+	INFO "$$ sql $sql";
 
         $sth = $dbh->prepare($sql) or die "can not prepare $sql";
         $rv = $sth->execute() or die "can not execute $sql";
