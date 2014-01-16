@@ -166,7 +166,7 @@ sub lookup_genome
     my($id_pairs);
     #BEGIN lookup_genome
 
-	my ($sql, $sth, $rv, $results, $id_pairs, $source_db);
+	my ($sql, $sth, $rv, $results, $source_db);
 	my $dbh = $self->{get_dbh}->();
 
 	if ( uc($type) eq "NAME" ) {
@@ -339,7 +339,7 @@ sub lookup_features
 
 =head2 lookup_feature_synonyms
 
-  $return = $obj->lookup_feature_synonyms($genome_kbase_id, $feature_type)
+  $return = $obj->lookup_feature_synonyms($kbase_id, $feature_type)
 
 =over 4
 
@@ -348,7 +348,7 @@ sub lookup_features
 =begin html
 
 <pre>
-$genome_kbase_id is a string
+$kbase_id is a string
 $feature_type is a string
 $return is a reference to a list where each element is an IdPair
 IdPair is a reference to a hash where the following keys are defined:
@@ -362,7 +362,7 @@ IdPair is a reference to a hash where the following keys are defined:
 
 =begin text
 
-$genome_kbase_id is a string
+$kbase_id is a string
 $feature_type is a string
 $return is a reference to a list where each element is an IdPair
 IdPair is a reference to a hash where the following keys are defined:
@@ -393,10 +393,10 @@ If not provided, all mappings should be returned.
 sub lookup_feature_synonyms
 {
     my $self = shift;
-    my($genome_kbase_id, $feature_type) = @_;
-
+    my($kbase_id, $feature_type) = @_;
+    INFO "kbase_id $kbase_id and feature_type $feature_type";
     my @_bad_arguments;
-    (!ref($genome_kbase_id)) or push(@_bad_arguments, "Invalid type for argument \"genome_kbase_id\" (value was \"$genome_kbase_id\")");
+    (!ref($kbase_id)) or push(@_bad_arguments, "Invalid type for argument \"kbase_id\" (value was \"$kbase_id\")");
     (!ref($feature_type)) or push(@_bad_arguments, "Invalid type for argument \"feature_type\" (value was \"$feature_type\")");
     if (@_bad_arguments) {
 	my $msg = "Invalid arguments passed to lookup_feature_synonyms:\n" . join("", map { "\t$_\n" } @_bad_arguments);
@@ -408,27 +408,36 @@ sub lookup_feature_synonyms
     my($return);
     #BEGIN lookup_feature_synonyms
 
-	my $return = [{'source_db'=>'sourcedb','source_id'=>'sourceid','kbase_id'=>'kbaseid'}];
+    my ($sql, $dbh, $sth, $rv, $ary_ref);
 
-# aliases_to_fids
+    # genome to feature
+    # feature to alias
+    # aliases to source
 
-  # $return = $obj->aliases_to_fids($aliases)
+    $dbh = $self->{get_dbh}->();
 
-# Parameter and return types
+    DEBUG "$$ quoting kbase_id $kbase_id";
+    DEBUG "$$ quoting feature_type $feature_type";
+    my $quoted_id = $dbh->quote($kbase_id);
+    my $quoted_type = $dbh->quote($feature_type);
+    DEBUG "$$ qouted genome_kbase_id $quoted_id";
+    DEBUG "$$ quoted feature_type $quoted_type";
 
-#    $aliases is an aliases
-#    $return is a reference to a hash where the key is an alias and the value is a fid
-#    aliases is a reference to a list where each element is an alias
-#    alias is a string
-#    fid is a string
+  $sql  = "select * from HasAliasAssertedFrom ";
+  $sql .= "where from_link in ";
+  $sql .= "(select o.to_link ";
+  $sql .= "from IsOwnerOf o, Feature f ";
+  $sql .= "where o.from_link = $quoted_id ";
+  $sql .= "and f.id = o.to_link ";
+  $sql .= "and f.feature_type = $feature_type)";
 
-
-
-
-
-
-
-
+  $sth = $dbh->prepare($sql) or die "could not prepare $sql";
+  $rv  = $sth->execute()     or die "could not execute $sql";
+  while(my $ary_ref = $sth->fetchrow_arrayref) {
+    push @{$return}, {'source_db'=>'$ary_ref->[]',
+		      'source_id'=>'$ary_ref->[]',
+		      'kbase_id'=>'$ary_ref->[]'};
+  }
 
     #END lookup_feature_synonyms
     my @_bad_returns;
@@ -499,7 +508,7 @@ sub longest_cds_from_locus
 
 	my($sql, $dbh, $sth, $rv, @query_ids);
 
-	my $dbh = $self->{get_dbh}->();
+	$dbh = $self->{get_dbh}->();
 	foreach (@{ $arg_1 }) {
 		push @query_ids, $dbh->quote($_);
 	}

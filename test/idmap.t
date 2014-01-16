@@ -59,19 +59,6 @@ print Dumper $return;
 
 ok(ref($obj->lookup_feature_synonyms("","")) eq 'ARRAY', "lookup_feature_synonyms returns an array reference");
 
-# | kb|g.3899.locus.9953  | kb|g.3899.mRNA.12242 | kb|g.3899.CDS.21726 |             369 |
-# | kb|g.3899.locus.9953  | kb|g.3899.mRNA.12379 | kb|g.3899.CDS.21494 |             348 |
-# | kb|g.3899.locus.9953  | kb|g.3899.mRNA.12551 | kb|g.3899.CDS.21269 |             372 |
-#
-# | kb|g.3899.locus.997   | kb|g.3899.mRNA.1209  | kb|g.3899.CDS.27325 |             858 |
-# | kb|g.3899.locus.997   | kb|g.3899.mRNA.1404  | kb|g.3899.CDS.27644 |            1104 |
-#
-# | kb|g.3899.locus.98    | kb|g.3899.mRNA.11    | kb|g.3899.CDS.26180 |            1893 |
-# | kb|g.3899.locus.98    | kb|g.3899.mRNA.163   | kb|g.3899.CDS.25774 |            1386 |
-# | kb|g.3899.locus.98    | kb|g.3899.mRNA.367   | kb|g.3899.CDS.26136 |            1878 |
-#
-# | kb|g.3899.locus.974   | kb|g.3899.mRNA.1662  | kb|g.3899.CDS.27123 |             582 |
-
 my $ids = ['kb|g.3899.locus.9953','kb|g.3899.locus.997','kb|g.3899.locus.98','kb|g.3899.locus.974'];
 ok(ref($longest = $obj->longest_cds_from_locus($ids)) eq "HASH", "longest_cds_from_locus returns a hash reference");
 print Dumper $longest;
@@ -81,8 +68,14 @@ ok(ref($longest = $obj->longest_cds_from_mrna($ids)) eq "HASH", "longest_cds_fro
 print Dumper $longest;
 
 $ids = [ 'kb|g.3899.mRNA.24549' ];
-ok(ref($longest = $obj->longest_cds_from_mrna($ids)) eq "HASH", "longest_cds_from_rna returns a hash reference");
+ok(ref($longest = $obj->longest_cds_from_mrna($ids)) eq "HASH",
+	"longest_cds_from_rna returns a hash reference");
 print Dumper $longest;
+
+$id = 'kb|g.3899';
+ok(ref($pairs = $obj->lookup_feature_synonyms()) eq 'ARRAY',
+	"lookup_feature_synonyms returned array reference");
+print Dumper $pairs;
 
 done_testing;
 
