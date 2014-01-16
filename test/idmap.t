@@ -45,37 +45,35 @@ isa_ok ($obj = Bio::KBase::IdMap::Client->new($url), Bio::KBase::IdMap::Client);
 ok(@{$genomes = $obj->lookup_genome("Burkholderia","NAME" )} > 0,
 	"lookup_genome returned genomes");
 
-print Dumper $genomes;
+# print Dumper $genomes;
 
 $ids = tax_id_list();
 ok(@{$genomes = $obj->lookup_genome(180504, "NCBI_TAXID")} == 1,
 	"lookup_genome returned one genome");
 
-print Dumper $genomes;
+# print Dumper $genomes;
 
 ok(ref($return = $obj->lookup_features("",[],"","")) eq 'HASH', "lookup_features returns a hash reference");
 
-print Dumper $return;
+# print Dumper $return;
 
-ok(ref($obj->lookup_feature_synonyms("","")) eq 'ARRAY', "lookup_feature_synonyms returns an array reference");
+ok(ref(($idpairs = $obj->lookup_feature_synonyms('kb|g.3899',"CDS"))) eq 'ARRAY', "lookup_feature_synonyms returns an array reference");
+
+print Dumper $idpairs;
 
 my $ids = ['kb|g.3899.locus.9953','kb|g.3899.locus.997','kb|g.3899.locus.98','kb|g.3899.locus.974'];
 ok(ref($longest = $obj->longest_cds_from_locus($ids)) eq "HASH", "longest_cds_from_locus returns a hash reference");
-print Dumper $longest;
+# print Dumper $longest;
 
 $ids = ['kb|g.3899.mRNA.1662','kb|g.3899.mRNA.11','kb|g.3899.mRNA.163','kb|g.3899.mRNA.367','kb|g.3899.mRNA.12379','kb|g.3899.mRNA.12242','kb|g.3899.mRNA.12551','kb|g.3899.mRNA.1404','kb|g.3899.mRNA.1209'];
 ok(ref($longest = $obj->longest_cds_from_mrna($ids)) eq "HASH", "longest_cds_from_rna returns a hash reference");
-print Dumper $longest;
+# print Dumper $longest;
 
 $ids = [ 'kb|g.3899.mRNA.24549' ];
 ok(ref($longest = $obj->longest_cds_from_mrna($ids)) eq "HASH",
 	"longest_cds_from_rna returns a hash reference");
-print Dumper $longest;
+# print Dumper $longest;
 
-$id = 'kb|g.3899';
-ok(ref($pairs = $obj->lookup_feature_synonyms()) eq 'ARRAY',
-	"lookup_feature_synonyms returned array reference");
-print Dumper $pairs;
 
 done_testing;
 

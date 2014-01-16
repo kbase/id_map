@@ -394,7 +394,7 @@ sub lookup_feature_synonyms
 {
     my $self = shift;
     my($kbase_id, $feature_type) = @_;
-    INFO "kbase_id $kbase_id and feature_type $feature_type";
+
     my @_bad_arguments;
     (!ref($kbase_id)) or push(@_bad_arguments, "Invalid type for argument \"kbase_id\" (value was \"$kbase_id\")");
     (!ref($feature_type)) or push(@_bad_arguments, "Invalid type for argument \"feature_type\" (value was \"$feature_type\")");
@@ -429,14 +429,16 @@ sub lookup_feature_synonyms
   $sql .= "from IsOwnerOf o, Feature f ";
   $sql .= "where o.from_link = $quoted_id ";
   $sql .= "and f.id = o.to_link ";
-  $sql .= "and f.feature_type = $feature_type)";
+  $sql .= "and f.feature_type = $quoted_type)";
+
+  INFO "$$ $sql";
 
   $sth = $dbh->prepare($sql) or die "could not prepare $sql";
   $rv  = $sth->execute()     or die "could not execute $sql";
   while(my $ary_ref = $sth->fetchrow_arrayref) {
-    push @{$return}, {'source_db'=>'$ary_ref->[]',
-		      'source_id'=>'$ary_ref->[]',
-		      'kbase_id'=>'$ary_ref->[]'};
+    push @{$return}, {'source_db'  =>  $ary_ref->[1],
+		      'source_id'  =>  $ary_ref->[2],
+		      'kbase_id'   =>  $ary_ref->[0]};
   }
 
     #END lookup_feature_synonyms
