@@ -48,7 +48,7 @@ ok(@{$genomes = $obj->lookup_genome("Burkholderia","NAME" )} > 0,
 # print Dumper $genomes;
 
 $ids = tax_id_list();
-ok(@{$genomes = $obj->lookup_genome(180504, "NCBI_TAXID")} == 1,
+ok(@{$genomes = $obj->lookup_genome(441164, "NCBI_TAXID")} == 1,
 	"lookup_genome returned one genome");
 
 # print Dumper $genomes;
@@ -59,7 +59,7 @@ ok(ref($return = $obj->lookup_features("",[],"","")) eq 'HASH', "lookup_features
 
 ok(ref(($idpairs = $obj->lookup_feature_synonyms('kb|g.3899',"CDS"))) eq 'ARRAY', "lookup_feature_synonyms returns an array reference");
 
-print Dumper $idpairs;
+# print Dumper $idpairs;
 
 my $ids = ['kb|g.3899.locus.9953','kb|g.3899.locus.997','kb|g.3899.locus.98','kb|g.3899.locus.974'];
 ok(ref($longest = $obj->longest_cds_from_locus($ids)) eq "HASH", "longest_cds_from_locus returns a hash reference");
