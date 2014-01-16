@@ -13,7 +13,7 @@ module IdMap {
       the source database of the external id.
   */
 
-  typedef structure{
+  typedef structure {
     string source_db;
     string source_id;
     string kbase_id;
@@ -60,6 +60,8 @@ module IdMap {
       string source_db     - the name of a database to consider as
       a source of a feature_ids. If not provided, all databases
       should be considered,
+
+      The return is a mapping OF WHAT?
   */
 
   funcdef lookup_features(string kb_genome_id, list<string> aliases, string feature_type, string source_db)
@@ -67,20 +69,35 @@ module IdMap {
 
 
 /*
-Returns a list of mappings of all possible types of feature
-synonyms and external ids to feature kbase ids for a
-particular kbase genome, and a given type of a feature.
+    Returns a list of mappings of all possible types of feature
+    synonyms and external ids to feature kbase ids for a
+    particular kbase genome, and a given type of a feature.
 
-string genome_kbase_id - kbase id of a target genome
-string feature_type - type of a kbase feature, e.g. CDS,
-pep, etc (see
-https://trac.kbase.us/projects/kbase/wiki/IDRegistry). If
-not provided, all mappings should be returned
+    string genome_kbase_id - kbase id of a target genome
+    string feature_type - type of a kbase feature, e.g. CDS,
+    pep, etc (see https://trac.kbase.us/projects/kbase/wiki/IDRegistry).
+    If not provided, all mappings should be returned.
 */
 
 
-funcdef lookup_feature_synonyms(string genome_kbase_id, string feature_type)
-	returns (list<IdPair>);
+    funcdef lookup_feature_synonyms(string genome_kbase_id, string feature_type)
+       returns (list<IdPair>);
+
+
+/*
+    Returns - A mapping of locus feature id to cds feature id
+*/
+    funcdef longest_cds_from_locus(list<string>)
+        returns (mapping<string, string>);
+
+/*
+
+*/
+    funcdef longest_cds_from_mrna(list<string>)
+        returns (mapping<string, string>);
+
+
+
 
 };
 
