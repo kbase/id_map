@@ -8,4 +8,96 @@ with id a name that matches what was passed in.
 It also means that a lookup, if done on a database, at best can only
 be a case insensitive exact match of the query as a substring.
 
-For the method lookup_synomyms
+For the method lookup_features, here is the original documentation
+for the IdPair structure:
+
+/*
+   A mapping of external identifier of an object to a corresponding
+   kbase identifier
+
+   string source_db - source database/resource of the object to be
+   mapped to kbase id
+
+   string source_id - identifier of the object to be mapped to kbase
+   id
+
+   string kbase_id - identifier of the same object in the KBase name
+   space
+*/
+
+If I translate this using the following definitions:
+
+alias      - an identifier assigned by an external entity
+feature id - a kbase identifier assigned to a feature in
+             the central store
+source db  - a kbase identifier of the external entity
+
+/*
+   A mapping of aliases to the corresponding kbase identifier.
+
+   string source_db  - the kbase id of the source
+   string alias      - the identifier to be mapped to a feature id
+   string feature_id - the kbase id of the feature
+*/
+   typedef structure {
+        string source_db;
+        string alias;
+        string feature_id;
+    } IdPair;
+
+Then let's look at the original specification of the method.
+It reads like this:
+
+/*
+        Makes an attempt to map external identifiers of features (genes, proteins, etc) to the corresponding kbase identifiers. Multiple candidates can be found per each external feature identifier.
+
+*/
+
+If I translate this using the definitions above for feature id,
+alias and source db, then it becomes:
+
+/*
+   Makes an attempt to find feature ids for the aliases provided.
+   The match is somewhat ambiguous  in that if an alias is provided
+   that is associated with a feature of type locus, then the
+   mrna and cds features encompassed in that locus will also be
+   returned. Therefor it is possible to have multiple feature ids
+   associated with one alias.
+*/
+
+And the original spec says this about the parameters:
+
+/*
+        string genome_kbase_id - kbase id of a target genome
+        list<string> feature_ids - list of feature identifiers. e.g. locus tag, gene name, MO locus id, etc.
+        string feature_type - type of a kbase feature to map to, e.g. CDS, pep, etc (see https://trac.kbase.us/projects/kbase/wiki/IDRegistry). If not provided, all mappings should be returned
+        string source_db - the name of a database to consider as a source of a feature_ids. If not provided, all databases should be considered,
+*/
+
+Which I translate to this:
+
+/*
+   Parameters for the lookup_features function are:
+   string genome_id     - a kbase genome identifier
+   list<string> aliases - a list of aliases
+   string feature_type  - a kbase feature type
+   string source_db     - a kbase source identifier
+*/
+
+And the original spec says this about the return value:
+
+/*
+   mapping<string, list<IdPair>>
+*/
+
+Which I translate to this:
+
+/*
+  The lookup_features function returns a mapping between
+  an alias and an IdPair.
+*/
+
+
+
+funcdef lookup_features(string genome_kbase_id, list<string> feature_ids, string feature_type, string source_db) returns ( mapping<string, list<IdPair>> );
+
