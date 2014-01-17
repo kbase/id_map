@@ -74,6 +74,19 @@ ok(ref($longest = $obj->longest_cds_from_mrna($ids)) eq "HASH",
 	"longest_cds_from_rna returns a hash reference");
 # print Dumper $longest;
 
+$aliases = ['AT1G79660.1.CDS','Q9MA09','AT1G79920.1.CDS','HSP70-15','F4HQD4','AT1G80120.1.CDS','Q9SSC7','AT1G80100.1.CDS','AHP6','Q9SSC9','AT1G79940.2.CDS','AT1G79940','ATERDJ2A','F18B13.2','F19K16.10','Q0WL47','Q0WT48','Q9CA96','Q9SSD9','AT1G80290.2.CDS','F5I6.4','F4HS52','Q8LG66','Q9C975','AT1G79570.1.CDS','AT1G79570','T8K14.1','Q0WMT5','Q56WL1','Q6NM13','Q9SAJ2','AT1G79580.2.CDS','SMB','Q9MA17','AT1G79915.1.CDS','F4HQD3','AT1G80960.2.CDS','Q9SAG4','AT1G79940.4.CDS','AT1G79940','ATERDJ2A','F18B13.2','F19K16.10'];
+
+ok(ref($idpairs = $obj->lookup_features('kb|g.3899', $aliases, '', '')) eq "HASH", "lookup_features returns a hash reference");
+print Dumper $idpairs;
+
+ok(ref($idpairs = $obj->lookup_features('kb|g.3899', $aliases, 'CDS', '')) eq "HASH", "lookup_features returns a hash reference");
+print Dumper $idpairs;
+
+(ref($idpairs = $obj->lookup_features('kb|g.3899', $aliases, '', 'uniprot_swissprot')) eq "HASH", "lookup_features returns a hash reference");
+print Dumper $idpairs;
+
+(ref($idpairs = $obj->lookup_features('kb|g.3899', $aliases, 'CDS', 'uniprot_swissprot')) eq "HASH", "lookup_features returns a hash reference");
+print Dumper $idpairs;
 
 done_testing;
 
