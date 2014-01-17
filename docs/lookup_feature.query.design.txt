@@ -27,13 +27,26 @@
 # For both of these try moving the and clause
 # sooner in the query.
 #
-# This one should work for all feature types
-select * from HasAliasAssertedFrom where to_link in
+# This one should work for all feature types.
+# The subselect gets the set of all feature ids for a genome.
+
+select * from HasAliasAssertedFrom where from_link in
  (select to_link from IsOwnerOf where from_link = $genome_id")
  and alias in (@aliases);
 
 # This one should work for a specified feature type
-select * from HasAliasAssertedFrom where to_link in
+select * from HasAliasAssertedFrom where from_link in
  (select o.to_link from IsOwnerOf o, Feature f where
   o.to_link=f.from_link and f.feature_type = $feature_type")
  and aliases in (@aliases) 
+
+
+
+select * from HasAliasAssertedFrom where from_link in
+(select to_link from IsOwnerOf where from_link = 'kb|g.3899')
+and alias in 
+('AT1G79660.1.CDS','Q9MA09','AT1G79920.1.CDS','HSP70-15','F4HQD4','AT1G80120.1.CDS','Q9SSC7','AT1G80100.1.CDS','AHP6','Q9SSC9','AT1G79940.2.CDS','AT1G79940','ATERDJ2A','F18B13.2','F19K16.10','Q0WL47','Q0WT48','Q9CA96','Q9SSD9','AT1G80290.2.CDS','F5I6.4','F4HS52','Q8LG66','Q9C975','AT1G79570.1.CDS','AT1G79570','T8K14.1','Q0WMT5','Q56WL1','Q6NM13','Q9SAJ2','AT1G79580.2.CDS','SMB','Q9MA17','AT1G79915.1.CDS','F4HQD3','AT1G80960.2.CDS','Q9SAG4','AT1G79940.4.CDS','AT1G79940','ATERDJ2A','F18B13.2','F19K16.10')
+
+select * from HasAliasAssertedFrom where from_link in (select o.to_link from IsOwnerOf o, Feature f where o.from_link = 'kb|g.3899'and o.to_link=f.id and f.feature_type = 'CDS')
+ and alias in ('AT1G79660.1.CDS','Q9MA09','AT1G79920.1.CDS','HSP70-15','F4HQD4','AT1G80120.1.CDS','Q9SSC7','AT1G80100.1.CDS','AHP6','Q9SSC9','AT1G79940.2.CDS','AT1G79940','ATERDJ2A','F18B13.2','F19K16.10','Q0WL47','Q0WT48','Q9CA96','Q9SSD9','AT1G80290.2.CDS','F5I6.4','F4HS52','Q8LG66','Q9C975','AT1G79570.1.CDS','AT1G79570','T8K14.1','Q0WMT5','Q56WL1','Q6NM13','Q9SAJ2','AT1G79580.2.CDS','SMB','Q9MA17','AT1G79915.1.CDS','F4HQD3','AT1G80960.2.CDS','Q9SAG4','AT1G79940.4.CDS','AT1G79940','ATERDJ2A','F18B13.2','F19K16.10')
+
