@@ -291,10 +291,10 @@ The return is a mapping OF WHAT?
 sub lookup_features
 {
     my $self = shift;
-    my($kb_genome_id, $aliases, $feature_type, $source_db) = @_;
+    my($genome_id, $aliases, $feature_type, $source_db) = @_;
 
     my @_bad_arguments;
-    (!ref($kb_genome_id)) or push(@_bad_arguments, "Invalid type for argument \"kb_genome_id\" (value was \"$kb_genome_id\")");
+    (!ref($genome_id)) or push(@_bad_arguments, "Invalid type for argument \"genome_id\" (value was \"$genome_id\")");
     (ref($aliases) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument \"aliases\" (value was \"$aliases\")");
     (!ref($feature_type)) or push(@_bad_arguments, "Invalid type for argument \"feature_type\" (value was \"$feature_type\")");
     (!ref($source_db)) or push(@_bad_arguments, "Invalid type for argument \"source_db\" (value was \"$source_db\")");
@@ -307,26 +307,79 @@ sub lookup_features
     my $ctx = $Bio::KBase::IdMap::Service::CallContext;
     my($return);
     #BEGIN lookup_features
-	$return = {'string'=> {'source_db'=>'sourcedb', 'source_id'=>'sourceid','kbase_id'=>'kbase_id'}};
-#	my $fids = $self->{}->aliases_to_fids($aliases);
-	$return = {
-          'AAA' => {
-                        'source_id' => 'AAA',
-                        'source_db' => 'fake sourcedb',
-                        'kbase_id' => 'kb|g.20848.CDS.fakeid'
-                      },
-          'BBB' => {
-                        'source_id' => 'BBB',
-                        'source_db' => 'fake sourcedb',
-                        'kbase_id' => 'kb|g.20848.CDS.fakeid'
-                      },
-          'CCC' => {
-                        'source_id' => 'CCC',
-                        'source_db' => 'fake sourcedb',
-                        'kbase_id' => 'kb|g.20848.CDS.fakeid'
-                      }
-        };
+	$return = {''=>[]};
+	# my $fids = $self->{}->aliases_to_fids($aliases);
+	# my $fids = $self->{}->genome_to_fids($genomes, $type)
+	my ( $dbh, $sql, $sth, $rv, $in_str, );
+	my ( $quoted_gid, $quoted_sid, $quoted_ft, );
+	$dbh = $self->{get_dbh}->();
+	foreach my $alias (@$aliases) {
+		$in_str .= $dbh->quote($alias) . ",";
+	}
+	$in_str =~ s/,$//;
+	$quoted_gid = $dbh->quote($genome_id);
+	$quoted_sid = $dbh->quote($source_db);
+	$quoted_ft  = $dbh->quote($feature_type);
 
+	if((not $source_db) and (not $feature_type)) {
+		DEBUG "$$ not source_db and not feature_tupe"; 
+		$sql  = "select * from HasAliasAssertedFrom ";
+		$sql .= "where from_link in ( ";
+		$sql .= "  select to_link from IsOwnerOf   ";
+		$sql .= "  where from_link = $quoted_gid ";
+		$sql .= ") and alias in ( $in_str ) ";
+        }
+	elsif ((not $source_db) and $feature_type ) {
+		DEBUG "$$ not source db and feature_type";
+		$sql  = "select * from HasAliasAssertedFrom ";
+		$sql .= "where from_link in ( ";
+		$sql .= "  select o.to_link from IsOwnerOf o, Feature f ";
+		$sql .= "  where o.from_link = $quoted_gid ";
+		$sql .= "  and o.to_link=f.id and f.feature_type = $quoted_ft ";
+		$sql .= ")  and alias in ( $in_str ) ";
+
+	}
+	elsif ($source_db and (not $feature_type)) {
+		DEBUG "$$ source db and not feature type";
+                $sql  = "select * from HasAliasAssertedFrom ";
+                $sql .= "where to_link = $quoted_sid and from_link in ( ";
+                $sql .= "  select o.to_link from IsOwnerOf o, Feature f ";
+                $sql .= "  where o.from_link = $quoted_gid ";
+                $sql .= "  and o.to_link=f.id ";
+                $sql .= ")  and alias in ( $in_str ) ";
+	}
+	elsif ($source_db and $feature_type) {
+		DEBUG "$$ source db and feature type";
+                $sql  = "select * from HasAliasAssertedFrom ";
+                $sql .= "where to_link = $quoted_sid and from_link in ( ";
+                $sql .= "  select o.to_link from IsOwnerOf o, Feature f ";
+                $sql .= "  where o.from_link = $quoted_gid ";
+                $sql .= "  and o.to_link=f.id and f.feature_type = $quoted_ft ";
+                $sql .= ")  and alias in ( $in_str ) ";
+	}
+	else {
+		die "unanticipated set of parameters";
+	}
+
+	INFO "$$ $sql";
+
+	$sth = $dbh->prepare($sql);
+	$rv  = $sth->execute();
+	
+	#+---------------------+----------------+-----------------+
+	#| from_link           | to_link        | alias           |
+	#+---------------------+----------------+-----------------+
+	#| kb|g.3899.CDS.70691 | load_file      | AT1G79940.3.CDS |
+	#| kb|g.3899.CDS.70691 | uniprot_gene   | AT1G79940       |
+
+	while ( my $ary_ref = $sth->fetchrow_arrayref ) {
+		push @{$return->{$ary_ref->[2]}},
+				{'feature_id' => $ary_ref->[0],
+				 'source_db'  => $ary_ref->[1],
+				 'alias'      => $ary_ref->[2]};
+	}
+
+	$return = {} if not defined $return;
 
     #END lookup_features
     my @_bad_returns;
@@ -366,23 +419,6 @@ IdPair is a reference to a hash where the following keys are defined:
 =end html
 
 =begin text
-
-$kbase_id is a string
-$feature_type is a string
-$return is a reference to a list where each element is an IdPair
-IdPair is a reference to a hash where the following keys are defined:
-	source_db has a value which is a string
-	source_id has a value which is a string
-	kbase_id has a value which is a string
-
-
-=end text
-
-
-
-=item Description
-
-Returns a list of mappings of all possible types of feature
 synonyms and external ids to feature kbase ids for a
 particular kbase genome, and a given type of a feature.
 
