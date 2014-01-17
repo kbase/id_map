@@ -1,0 +1,39 @@
+  $sql  = "select * from HasAliasAssertedFrom ";
+  $sql .= "where from_link in ";
+  $sql .= "(select o.to_link ";
+  $sql .= "from IsOwnerOf o, Feature f ";
+  $sql .= "where o.from_link = $quoted_id ";
+  $sql .= "and f.id = o.to_link ";
+  $sql .= "and f.feature_type = $quoted_type)";
+
+  INFO "$$ $sql";
+
+  $sth = $dbh->prepare($sql) or die "could not prepare $sql";
+  $rv  = $sth->execute()     or die "could not execute $sql";
+  while(my $ary_ref = $sth->fetchrow_arrayref) {
+    push @{$return}, {'source_db'  =>  $ary_ref->[1],
+                      'source_id'  =>  $ary_ref->[2],
+                      'kbase_id'   =>  $ary_ref->[0]};
+
+# So HasAliasAssertedFrom has three fields. These are in order
+# 1.  feature id (to_link)
+# 2.  source id (from_link)
+# 3.  alias
+
+# IsOwnerOf has two fields
+# 1. genome id (from_link)
+# 2. feature id (to_link)
+
+# For both of these try moving the and clause
+# sooner in the query.
+#
+# This one should work for all feature types
+select * from HasAliasAssertedFrom where to_link in
+ (select to_link from IsOwnerOf where from_link = $genome_id")
+ and alias in (@aliases);
+
+# This one should work for a specified feature type
+select * from HasAliasAssertedFrom where to_link in
+ (select o.to_link from IsOwnerOf o, Feature f where
+  o.to_link=f.from_link and f.feature_type = $feature_type")
+ and aliases in (@aliases) 
