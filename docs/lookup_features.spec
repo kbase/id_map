@@ -33,7 +33,7 @@ typedef structure {
   an alias and an IdPair.
 */
 
-funcdef lookup_features( string genome_id, list<string> feature_ids,
+funcdef lookup_features( string genome_id, list<string> aliases,
                          string feature_type, string source_db )
     returns ( mapping<string, list<IdPair>> );
 
