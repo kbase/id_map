@@ -99,7 +99,7 @@ $type is a string
 $id_pairs is a reference to a list where each element is an IdPair
 IdPair is a reference to a hash where the following keys are defined:
 	source_db has a value which is a string
-	source_id has a value which is a string
+	alias has a value which is a string
 	kbase_id has a value which is a string
 
 </pre>
@@ -113,7 +113,7 @@ $type is a string
 $id_pairs is a reference to a list where each element is an IdPair
 IdPair is a reference to a hash where the following keys are defined:
 	source_db has a value which is a string
-	source_id has a value which is a string
+	alias has a value which is a string
 	kbase_id has a value which is a string
 
 
@@ -166,6 +166,7 @@ sub lookup_genome
     my($id_pairs);
     #BEGIN lookup_genome
 
+	$id_pairs = [];
 	my ($sql, $sth, $rv, $results, $source_db);
 	my $dbh = $self->{get_dbh}->();
 
@@ -198,11 +199,10 @@ sub lookup_genome
         $rv = $sth->execute() or die "can not execute $sql";
         $results = $sth->fetchall_arrayref();
 
-	$id_pairs = [];
         foreach my $result (@$results) {
 
             push @{ $id_pairs }, {'source_db' => $source_db,
-				  'source_id' => $s,
+				  'alias' => $s,
 				  'kbase_id'  => $result->[0],
 				 };
         }
@@ -224,7 +224,7 @@ sub lookup_genome
 
 =head2 lookup_features
 
-  $return = $obj->lookup_features($kb_genome_id, $aliases, $feature_type, $source_db)
+  $return = $obj->lookup_features($genome_id, $aliases, $feature_type, $source_db)
 
 =over 4
 
@@ -233,14 +233,14 @@ sub lookup_genome
 =begin html
 
 <pre>
-$kb_genome_id is a string
+$genome_id is a string
 $aliases is a reference to a list where each element is a string
 $feature_type is a string
 $source_db is a string
 $return is a reference to a hash where the key is a string and the value is a reference to a list where each element is an IdPair
 IdPair is a reference to a hash where the following keys are defined:
 	source_db has a value which is a string
-	source_id has a value which is a string
+	alias has a value which is a string
 	kbase_id has a value which is a string
 
 </pre>
@@ -249,14 +249,14 @@ IdPair is a reference to a hash where the following keys are defined:
 
 =begin text
 
-$kb_genome_id is a string
+$genome_id is a string
 $aliases is a reference to a list where each element is a string
 $feature_type is a string
 $source_db is a string
 $return is a reference to a hash where the key is a string and the value is a reference to a list where each element is an IdPair
 IdPair is a reference to a hash where the following keys are defined:
 	source_db has a value which is a string
-	source_id has a value which is a string
+	alias has a value which is a string
 	kbase_id has a value which is a string
 
 
@@ -271,7 +271,7 @@ Makes an attempt to map external identifiers of features
 identifiers. Multiple candidates can be found per each
 external feature identifier.
 
-string kb_genome_id  - kbase id of a target genome
+string genome_id  - kbase id of a target genome
 
 list<string> aliases - list of aliases to lookup. 
 
@@ -307,11 +307,11 @@ sub lookup_features
     my $ctx = $Bio::KBase::IdMap::Service::CallContext;
     my($return);
     #BEGIN lookup_features
-	$return = {''=>[]};
-	# my $fids = $self->{}->aliases_to_fids($aliases);
-	# my $fids = $self->{}->genome_to_fids($genomes, $type)
+
+	$return = {};
 	my ( $dbh, $sql, $sth, $rv, $in_str, );
 	my ( $quoted_gid, $quoted_sid, $quoted_ft, );
+
 	$dbh = $self->{get_dbh}->();
 	foreach my $alias (@$aliases) {
 		$in_str .= $dbh->quote($alias) . ",";
@@ -397,7 +397,7 @@ sub lookup_features
 
 =head2 lookup_feature_synonyms
 
-  $return = $obj->lookup_feature_synonyms($kbase_id, $feature_type)
+  $return = $obj->lookup_feature_synonyms($genome_id, $feature_type)
 
 =over 4
 
@@ -406,12 +406,12 @@ sub lookup_features
 =begin html
 
 <pre>
-$kbase_id is a string
+$genome_id is a string
 $feature_type is a string
 $return is a reference to a list where each element is an IdPair
 IdPair is a reference to a hash where the following keys are defined:
 	source_db has a value which is a string
-	source_id has a value which is a string
+	alias has a value which is a string
 	kbase_id has a value which is a string
 
 </pre>
@@ -434,10 +434,10 @@ If not provided, all mappings should be returned.
 sub lookup_feature_synonyms
 {
     my $self = shift;
-    my($kbase_id, $feature_type) = @_;
+    my($genome_id, $feature_type) = @_;
 
     my @_bad_arguments;
-    (!ref($kbase_id)) or push(@_bad_arguments, "Invalid type for argument \"kbase_id\" (value was \"$kbase_id\")");
+    (!ref($genome_id)) or push(@_bad_arguments, "Invalid type for argument \"genome_id\" (value was \"$genome_id\")");
     (!ref($feature_type)) or push(@_bad_arguments, "Invalid type for argument \"feature_type\" (value was \"$feature_type\")");
     if (@_bad_arguments) {
 	my $msg = "Invalid arguments passed to lookup_feature_synonyms:\n" . join("", map { "\t$_\n" } @_bad_arguments);
@@ -457,11 +457,11 @@ sub lookup_feature_synonyms
 
     $dbh = $self->{get_dbh}->();
 
-    DEBUG "$$ quoting kbase_id $kbase_id";
+    DEBUG "$$ quoting genome_id $genome_id";
     DEBUG "$$ quoting feature_type $feature_type";
-    my $quoted_id = $dbh->quote($kbase_id);
+    my $quoted_id = $dbh->quote($genome_id);
     my $quoted_type = $dbh->quote($feature_type);
-    DEBUG "$$ qouted genome_kbase_id $quoted_id";
+    DEBUG "$$ qouted genome_genome_id $quoted_id";
     DEBUG "$$ quoted feature_type $quoted_type";
 
   $sql  = "select * from HasAliasAssertedFrom ";
@@ -478,7 +478,7 @@ sub lookup_feature_synonyms
   $rv  = $sth->execute()     or die "could not execute $sql";
   while(my $ary_ref = $sth->fetchrow_arrayref) {
     push @{$return}, {'source_db'  =>  $ary_ref->[1],
-		      'source_id'  =>  $ary_ref->[2],
+		      'alias'  =>  $ary_ref->[2],
 		      'kbase_id'   =>  $ary_ref->[0]};
   }
 
@@ -753,7 +753,7 @@ the source database of the external id.
 <pre>
 a reference to a hash where the following keys are defined:
 source_db has a value which is a string
-source_id has a value which is a string
+alias has a value which is a string
 kbase_id has a value which is a string
 
 </pre>
@@ -764,7 +764,7 @@ kbase_id has a value which is a string
 
 a reference to a hash where the following keys are defined:
 source_db has a value which is a string
-source_id has a value which is a string
+alias has a value which is a string
 kbase_id has a value which is a string
 
 
