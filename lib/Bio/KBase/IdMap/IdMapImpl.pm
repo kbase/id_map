@@ -466,6 +466,7 @@ sub lookup_feature_synonyms
     my($return);
     #BEGIN lookup_feature_synonyms
 
+    $return = [];
     my ($sql, $dbh, $sth, $rv, $ary_ref);
 
     # genome to feature
