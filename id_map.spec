@@ -8,63 +8,72 @@
 
 module IdMap {
 
-  /*  An IdPair object represents a mapping of a kbase id
-      to an external id. Additional information includes
-      the source database of the external id.
-  */
+/*
+   A mapping of aliases to the corresponding kbase identifier.
+
+   string source_db  - the kbase id of the source
+   string alias      - the identifier to be mapped to a feature id
+   string feature_id - the kbase id of the feature
+*/
 
   typedef structure {
     string source_db;
-    string source_id;
+    string alias;
     string kbase_id;
   } IdPair;
 
-  /*  Makes an attempt to map external identifier of a genome to
-      the corresponding kbase identifier. Multiple candidates can
-      be found, thus a list of IdPairs is returned.
+/*  Makes an attempt to map external identifier of a genome to
+    the corresponding kbase identifier. Multiple candidates can
+    be found, thus a list of IdPairs is returned.
 
-      string s - a string that represents some sort of genome
-      identifier. The type of identifier is resolved with the
-      type parameter.
+    string s - a string that represents some sort of genome
+    identifier. The type of identifier is resolved with the
+    type parameter.
 
-      string type - this provides information about the tupe
-      of alias that is provided as the first parameter.
+    string type - this provides information about the tupe
+    of alias that is provided as the first parameter.
 
-      An example of the parameters is the first parameter could
-      be a string "Burkholderia" and the type could be
-      scientific_name.
+    An example of the parameters is the first parameter could
+    be a string "Burkholderia" and the type could be
+    scientific_name.
 
-      A second example is the first parmater could be an integer
-      and the type could be ncbi_taxonid.
+    A second example is the first parmater could be an integer
+    and the type could be ncbi_taxonid.
 
-      These are the two supported cases at this time. Valid types
-      are NAME and NCBI_TAXID
-  */
+    These are the two supported cases at this time. Valid types
+    are NAME and NCBI_TAXID
+*/
 
   funcdef lookup_genome(string s, string type)
     returns (list<IdPair> id_pairs);
 
 
-  /*  Makes an attempt to map external identifiers of features
-      (genes, proteins, etc) to the corresponding kbase
-      identifiers. Multiple candidates can be found per each
-      external feature identifier.
+/*
+   Given a genome id, a list of aliases, a feature type and a source db
+   return the set of feature ids associated with the aliases.
 
-      string kb_genome_id  - kbase id of a target genome
+   lookup_features attempts to find feature ids for the aliases provided.
+   The match is somewhat ambiguous  in that if an alias is provided
+   that is associated with a feature of type locus, then the
+   mrna and cds features encompassed in that locus will also be
+   returned. Therefor it is possible to have multiple feature ids
+   associated with one alias.
 
-      list<string> aliases - list of aliases to lookup. 
+   Parameters for the lookup_features function are:
+   string genome_id     - a kbase genome identifier
+   list<string> aliases - a list of aliases
+   string feature_type  - a kbase feature type
+   string source_db     - a kbase source identifier
 
-      string feature_type  - type of a kbase feature to map to,
-      Supported types are 'CDS'.
+   To specify all feature types, provide an empty string as the
+   value of the feature_type parameter. To specify all source databases,
+   provide an empty string as the value of the source_db parameter.
 
-      string source_db     - the name of a database to consider as
-      a source of a feature_ids. If not provided, all databases
-      should be considered,
+  The lookup_features function returns a mapping between
+  an alias and an IdPair.
+*/
 
-      The return is a mapping OF WHAT?
-  */
-
-  funcdef lookup_features(string kb_genome_id, list<string> aliases, string feature_type, string source_db)
+  funcdef lookup_features(string genome_id, list<string> aliases, string feature_type, string source_db)
     returns ( mapping<string, list<IdPair>> );
 
 
@@ -73,28 +82,28 @@ module IdMap {
     synonyms and external ids to feature kbase ids for a
     particular kbase genome, and a given type of a feature.
 
-    string genome_kbase_id - kbase id of a target genome
+    string genome_id - kbase id of a target genome
     string feature_type - type of a kbase feature, e.g. CDS,
     pep, etc (see https://trac.kbase.us/projects/kbase/wiki/IDRegistry).
     If not provided, all mappings should be returned.
 */
 
 
-    funcdef lookup_feature_synonyms(string kbase_id, string feature_type)
-       returns (list<IdPair>);
+  funcdef lookup_feature_synonyms(string genome_id, string feature_type)
+    returns (list<IdPair>);
 
 
 /*
-    Returns - A mapping of locus feature id to cds feature id
+    Returns a mapping of locus feature id to cds feature id.
 */
-    funcdef longest_cds_from_locus(list<string>)
-        returns (mapping<string, string>);
+  funcdef longest_cds_from_locus(list<string>)
+    returns (mapping<string, string>);
 
 /*
-
+   Returns a mapping a mrna feature id to a cds feature id.
 */
-    funcdef longest_cds_from_mrna(list<string>)
-        returns (mapping<string, string>);
+  funcdef longest_cds_from_mrna(list<string>)
+    returns (mapping<string, string>);
 
 
 
