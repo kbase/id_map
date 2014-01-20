@@ -82,12 +82,13 @@ print Dumper $idpairs;
 ok(ref($idpairs = $obj->lookup_features('kb|g.3899', $aliases, 'CDS', '')) eq "HASH", "lookup_features returns a hash reference");
 print Dumper $idpairs;
 
-(ref($idpairs = $obj->lookup_features('kb|g.3899', $aliases, '', 'uniprot_swissprot')) eq "HASH", "lookup_features returns a hash reference");
-print Dumper $idpairs;
+ok(ref($idpairs = $obj->lookup_features('kb|g.3899', $aliases, '', 'uniprot_swissprot')) eq "HASH", "lookup_features returns a hash reference");
+# print Dumper $idpairs;
 
-(ref($idpairs = $obj->lookup_features('kb|g.3899', $aliases, 'CDS', 'uniprot_swissprot')) eq "HASH", "lookup_features returns a hash reference");
-print Dumper $idpairs;
+ok(ref($idpairs = $obj->lookup_features('kb|g.3899', $aliases, 'CDS', 'uniprot_swissprot')) eq "HASH", "lookup_features returns a hash reference");
+# print Dumper $idpairs;
 
+ok(ref($aliases_locus = $obj->lookup_feature_synonyms('kb|g.1870','locus')) eq "ARRAY", "returns an ARRAY reference");
 done_testing;
 
 
