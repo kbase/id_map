@@ -13,7 +13,7 @@ module IdMap {
 
    string source_db  - the kbase id of the source
    string alias      - the identifier to be mapped to a feature id
-   string feature_id - the kbase id of the feature
+   string kbase_id - the kbase id of the feature
 */
 
   typedef structure {
