@@ -25,8 +25,7 @@ use DBI;
 use Data::Dumper;
 use Config::Simple;
 use Log::Log4perl qw(:easy);
-Log::Log4perl->easy_init($DEBUG);
-use Bio::KBase::CDMI::Client;
+Log::Log4perl->easy_init($INFO);
 our $cfg = {};
 our ($mysql_user, $mysql_pass, $data_source, $cdmi_url);
 
@@ -36,12 +35,9 @@ if (defined $ENV{KB_DEPLOYMENT_CONFIG} && -e $ENV{KB_DEPLOYMENT_CONFIG}) {
     $mysql_user    = $cfg->param('id_map.mysql-user');
     $mysql_pass    = $cfg->param('id_map.mysql-pass');
     $data_source   = $cfg->param('id_map.data-source');
-    $cdmi_url      = $cfg->param('id_map.cdmi_url');
     INFO "$$ reading config from $ENV{KB_DEPLOYMENT_CONFIG}";
-    # DEBUG "$$ mysl user:   $mysql_user";
+    DEBUG "$$ mysl user:   $mysql_user";
     INFO "$$ data source: $data_source";
-    INFO "$$ cdmi url:    $cdmi_url";
-    # DEBUG "$$ mysql pass:  $mysql_pass";
 }
 else {
     die "could not find KB_DEPLOYMENT_CONFIG";
@@ -68,7 +64,6 @@ sub new
         };
 
 	# create client interface to central store
-	$self->{cdmi} = Bio::KBase::CDMI::Client->new($cdmi_url);
 		
     #END_CONSTRUCTOR
 
@@ -266,23 +261,28 @@ IdPair is a reference to a hash where the following keys are defined:
 
 =item Description
 
-Makes an attempt to map external identifiers of features
-(genes, proteins, etc) to the corresponding kbase
-identifiers. Multiple candidates can be found per each
-external feature identifier.
+Given a genome id, a list of aliases, a feature type and a source db
+return the set of feature ids associated with the aliases.
 
-string genome_id  - kbase id of a target genome
+lookup_features attempts to find feature ids for the aliases provided.
+The match is somewhat ambiguous  in that if an alias is provided
+that is associated with a feature of type locus, then the
+mrna and cds features encompassed in that locus will also be
+returned. Therefor it is possible to have multiple feature ids
+associated with one alias.
 
-list<string> aliases - list of aliases to lookup. 
+Parameters for the lookup_features function are:
+string genome_id     - a kbase genome identifier
+list<string> aliases - a list of aliases
+string feature_type  - a kbase feature type
+string source_db     - a kbase source identifier
 
-string feature_type  - type of a kbase feature to map to,
-Supported types are 'CDS'.
+To specify all feature types, provide an empty string as the
+value of the feature_type parameter. To specify all source databases,
+provide an empty string as the value of the source_db parameter.
 
-string source_db     - the name of a database to consider as
-a source of a feature_ids. If not provided, all databases
-should be considered,
-
-The return is a mapping OF WHAT?
+  The lookup_features function returns a mapping between
+  an alias and an IdPair.
 
 =back
 
@@ -374,7 +374,7 @@ sub lookup_features
 
 	while ( my $ary_ref = $sth->fetchrow_arrayref ) {
 		push @{$return->{$ary_ref->[2]}},
-				{'feature_id' => $ary_ref->[0],
+				{'kbase_id' => $ary_ref->[0],
 				 'source_db'  => $ary_ref->[1],
 				 'alias'      => $ary_ref->[2]};
 	}
@@ -419,10 +419,27 @@ IdPair is a reference to a hash where the following keys are defined:
 =end html
 
 =begin text
+
+$genome_id is a string
+$feature_type is a string
+$return is a reference to a list where each element is an IdPair
+IdPair is a reference to a hash where the following keys are defined:
+	source_db has a value which is a string
+	alias has a value which is a string
+	kbase_id has a value which is a string
+
+
+=end text
+
+
+
+=item Description
+
+Returns a list of mappings of all possible types of feature
 synonyms and external ids to feature kbase ids for a
 particular kbase genome, and a given type of a feature.
 
-string genome_kbase_id - kbase id of a target genome
+string genome_id - kbase id of a target genome
 string feature_type - type of a kbase feature, e.g. CDS,
 pep, etc (see https://trac.kbase.us/projects/kbase/wiki/IDRegistry).
 If not provided, all mappings should be returned.
@@ -526,7 +543,7 @@ $return is a reference to a hash where the key is a string and the value is a st
 
 =item Description
 
-Returns - A mapping of locus feature id to cds feature id
+Returns a mapping of locus feature id to cds feature id.
 
 =back
 
@@ -632,7 +649,7 @@ $return is a reference to a hash where the key is a string and the value is a st
 
 =item Description
 
-
+Returns a mapping a mrna feature id to a cds feature id.
 
 =back
 
@@ -741,9 +758,11 @@ sub version {
 
 =item Description
 
-An IdPair object represents a mapping of a kbase id
-to an external id. Additional information includes
-the source database of the external id.
+A mapping of aliases to the corresponding kbase identifier.
+
+string source_db  - the kbase id of the source
+string alias      - the identifier to be mapped to a feature id
+string kbase_id - the kbase id of the feature
 
 
 =item Definition
