@@ -1,0 +1,9 @@
+The id_map service provides lookups to the central store for finding ids and aliases related to genomes and genome features.
+
+Initial release of handle service. v.0.1.0
+- programming API
+- command line interface
+
+	commit 2b18e4ec166b2fb6006521d8f6ffbc2ff2591559
+	Author: brettin <brettin@mcs.anl.gov>
+	Date:   Mon Jan 20 19:07:13 2014 +0000
