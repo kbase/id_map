@@ -162,13 +162,13 @@ sub lookup_genome
     #BEGIN lookup_genome
 
 	$id_pairs = [];
-	my ($sql, $sth, $rv, $results, $source_db);
-	my $dbh = $self->{get_dbh}->();
-
+	my ($sql, $sth, $rv, $results, $source_db, $q_input);
+	my $dbh = $self->{get_dbh}->(); 
+       
 	if ( uc($type) eq "NAME" ) {
-
+	    $q_input = uc($s) . '%';
 	    $sql  = "select id from Genome ";
-	    $sql .= "where UPPER(scientific_name) like \'" . uc $s . "\%\'";
+	    $sql .= "where UPPER(scientific_name) like ?";
 
 	    $source_db = 'NCBI';
 
@@ -179,9 +179,10 @@ sub lookup_genome
 	    $sql  = "select g.id, t.scientific_name ";
 	    $sql .= "from Genome g, TaxonomicGrouping t ";
 	    $sql .= "where g.scientific_name = t.scientific_name ";
-	    $sql .= "and t.id = $s";
+	    $sql .= "and t.id = ?";
 
 	    $source_db = 'NCBI';
+	    $q_input = $s;
 
 	}
 	else {
@@ -191,7 +192,7 @@ sub lookup_genome
 	INFO "$$ sql $sql";
 
         $sth = $dbh->prepare($sql) or die "can not prepare $sql";
-        $rv = $sth->execute() or die "can not execute $sql";
+        $rv = $sth->execute($q_input) or die "can not execute $sql";
         $results = $sth->fetchall_arrayref();
 
         foreach my $result (@$results) {
