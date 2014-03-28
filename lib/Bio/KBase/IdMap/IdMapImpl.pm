@@ -166,21 +166,20 @@ sub lookup_genome
 	my $dbh = $self->{get_dbh}->(); 
        
 	if ( uc($type) eq "NAME" ) {
-	    $q_input = uc($s) . '%';
-	    $sql  = "select id from Genome ";
-	    $sql .= "where UPPER(scientific_name) like ?";
+	    $q_input = '%' .uc($s) . '%';
+	    $sql = "select distinct g.id from Genome g left outer join ".
+		   "IsTaxonomyOf it on it.to_link = g.id left outer join ".
+		   "TaxonomicGrouping tg on tg.id = it.from_link ".
+		   "where UPPER(tg.scientific_name) like ? or UPPER(g.scientific_name) like ? ";
 
 	    $source_db = 'NCBI';
 
 	}
 
 	elsif ( uc($type) eq "NCBI_TAXID" ) {
-
-	    $sql  = "select g.id, t.scientific_name ";
-	    $sql .= "from Genome g, TaxonomicGrouping t ";
-	    $sql .= "where g.scientific_name = t.scientific_name ";
-	    $sql .= "and t.id = ?";
-
+	    $sql = "select it.to_link, t.scientific_name from IsTaxonomyOf it ".
+		   "inner join TaxonomicGrouping t on it.from_link=t.id ".
+		   "where t.id = ? and t.id = ? ";
 	    $source_db = 'NCBI';
 	    $q_input = $s;
 
@@ -192,7 +191,7 @@ sub lookup_genome
 	INFO "$$ sql $sql";
 
         $sth = $dbh->prepare($sql) or die "can not prepare $sql";
-        $rv = $sth->execute($q_input) or die "can not execute $sql";
+        $rv = $sth->execute($q_input,$q_input) or die "can not execute $sql";
         $results = $sth->fetchall_arrayref();
 
         foreach my $result (@$results) {
