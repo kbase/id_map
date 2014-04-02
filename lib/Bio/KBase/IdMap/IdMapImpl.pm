@@ -574,13 +574,21 @@ sub longest_cds_from_locus
 		push @query_ids, $dbh->quote($_);
 	}
 
-	$sql  = "select t1.to_link, t1.from_link, t2.from_link, f.sequence_length ";
-	$sql .= "from Feature f, Encompasses t1 ";
-	$sql .= "join Encompasses t2 on t1.from_link = t2.to_link ";
-	$sql .= "where t1.to_link in ( ";
-	$sql .= join ",", @query_ids;
-	$sql .= " ) ";
-	$sql .= "and t2.from_link = f.id";
+	#$sql  = "select t1.to_link, t1.from_link, t2.from_link, f.sequence_length ";
+	#$sql .= "from Feature f, Encompasses t1 ";
+	#$sql .= "join Encompasses t2 on t1.from_link = t2.to_link ";
+	#$sql .= "where t1.to_link in ( ";
+	#$sql .= join ",", @query_ids;
+	#$sql .= " ) ";
+	#$sql .= "and t2.from_link = f.id";
+
+        $sql  = "select t1.from_link, t1.to_link, t2.to_link, f.sequence_length ";
+        $sql .= "from Feature f, Encompasses t1 ";
+        $sql .= "join Encompasses t2 on t1.to_link = t2.from_link ";
+        $sql .= "where t1.from_link in ( ";
+        $sql .= join ",", @query_ids;
+        $sql .= " ) ";
+        $sql .= "and t2.to_link = f.id";
 
 	DEBUG "$$ $sql";
 
