@@ -703,7 +703,7 @@ sub longest_cds_from_mrna
         while(my $ary_ref = $sth->fetchrow_arrayref) {
                 DEBUG "$$ $ary_ref->[1] $ary_ref->[2] $ary_ref->[3]";
                 my ($len) = values %{ $return->{$ary_ref->[1]} };
-                $return->{$ary_ref->[1]} = {$ary_ref->[2] => $ary_ref->[3]}
+                $return->{$ary_ref->[1]} = {$ary_ref->[0] => $ary_ref->[3]}
                          if $ary_ref->[3] > $len;
                 DEBUG "$$ is $ary_ref->[3] gt $len";
         }
